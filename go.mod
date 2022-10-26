@@ -1,4 +1,4 @@
-module caption-search
+module github.com/jerrutledge/caption-search
 
 go 1.19
 
