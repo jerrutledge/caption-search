@@ -8,6 +8,7 @@ import (
 
 	"github.com/jerrutledge/caption-search/episode"
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -44,36 +45,23 @@ func main() {
 
 	collection := client.Database("caption-search").Collection("episodes")
 
+	// CREATE
 	example_episode := episode.Episode{
-		Full_text: "This is the full text",
+		Full_text: "I'm made of moon cheese",
 		Title:     "Episode Title",
 		Yt_id:     "owien23k"}
 
-	insertResult, err := collection.InsertOne(context.TODO(), example_episode)
-	if err != nil {
-		log.Fatal(err)
-	}
+	episode.Create(collection, example_episode)
 
-	fmt.Println("Inserted a single document: ", insertResult.InsertedID)
+	// // READ
+	filter := bson.D{{"yt_id", "owien23k"}}
+	episode.Read(collection, filter)
 
-	// coll := client.Database("sample_mflix").Collection("movies")
-	// title := "Back to the Future"
+	// // UPDATE
+	episode.Update(collection, filter)
 
-	// var result bson.M
-	// err = coll.FindOne(context.TODO(), bson.D{{Key: "title", Value: title}}).Decode(&result)
-	// if err == mongo.ErrNoDocuments {
-	// 	fmt.Printf("No document was found with the title %s\n", title)
-	// 	return
-	// }
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// jsonData, err := json.MarshalIndent(result, "", "    ")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Printf("%s\n", jsonData)
+	// DELETE
+	episode.Delete_all(collection)
 
 	// Disconnect from MongoDB
 	err = client.Disconnect(context.TODO())
