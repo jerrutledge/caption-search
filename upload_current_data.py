@@ -2,7 +2,9 @@
 
 import json
 from os import listdir
+import os
 from os.path import isfile, join
+from pymongo import MongoClient
 
 
 directory_path = "transcripts"
@@ -42,22 +44,33 @@ if __name__ == "__main__":
         episode_title = episode_title.replace("episode", "ep")
         episode_title = episode_title.replace(" ep ", " ").replace(" - ", " ")
         id_full_title[ep_id] = episode_title
-        print(episode_title)
+
+    print("finished getting titles")
+
+    uri = os.getenv('MONGODB_URI')
+    client = MongoClient(uri)
+    collection = client['caption-search']["episodes"]
+
+    print("finished connecting to db")
 
     skips = []
-    with open(output_filename, 'w') as file:
-        for filename in filenames:
-            if ".srt" not in filename:
-                skips.append(filename)
-                continue
-            title = filename.replace(".srt", "")
-            title = title.replace('.', '').lower().replace("episode", "ep")
-            title = title.replace(" ep ", " ").replace(" - ", " ")
-            found_title = find_title(id_full_title, title)
-            if found_title == None:
-                skips.append(filename)
-                continue
-            file.write(found_title + "\t" + filename + "\n")
+    for filename in filenames:
+        if ".srt" not in filename:
+            skips.append(filename)
+            continue
+        title = filename.replace(".srt", "")
+        title = title.replace('.', '').lower().replace("episode", "ep")
+        title = title.replace(" ep ", " ").replace(" - ", " ")
+        found_title = find_title(id_full_title, title)
+        if found_title == None:
+            skips.append(filename)
+            continue
+
+        data = {"full_text": "empty string... tbd",
+        "title": id_full_title[found_title],
+        "yt_id": found_title}
+        collection.insert_one(data)
+        print("inserted", found_title)
 
     if len(skips):
         print("Had to skip:", skips)
