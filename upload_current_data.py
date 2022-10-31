@@ -5,6 +5,7 @@ from os import listdir
 import os
 from os.path import isfile, join
 from pymongo import MongoClient
+import pysrt
 
 
 directory_path = "transcripts"
@@ -34,16 +35,18 @@ if __name__ == "__main__":
         data = json.load(file)
 
     id_full_title = {}
+    id_unedited_title = {}
     for entry in data:
         # try to find a matching srt file
         ep_id = entry["items"][0]["id"]
-        episode_title = entry["items"][0]["snippet"]["title"]
-        episode_title = episode_title.replace('.', '').replace(
+        episode_title_unedited = entry["items"][0]["snippet"]["title"]
+        episode_title = episode_title_unedited.replace('.', '').replace(
             '/', '').replace("”", '').replace("“", '').replace('"', '')
         episode_title = episode_title.replace(':', "").lower()
         episode_title = episode_title.replace("episode", "ep")
         episode_title = episode_title.replace(" ep ", " ").replace(" - ", " ")
         id_full_title[ep_id] = episode_title
+        id_unedited_title[ep_id] = episode_title_unedited
 
     print("finished getting titles")
 
@@ -66,8 +69,13 @@ if __name__ == "__main__":
             skips.append(filename)
             continue
 
-        data = {"full_text": "empty string... tbd",
-        "title": id_full_title[found_title],
+        subtitles = pysrt.open(directory_path+"/"+filename)
+        data_text = ""
+        for sub in subtitles:
+            data_text += sub.text.strip() + " "
+
+        data = {"full_text": data_text.strip(),
+        "title": id_unedited_title[found_title],
         "yt_id": found_title}
         collection.insert_one(data)
         print("inserted", found_title)
