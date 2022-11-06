@@ -4,15 +4,17 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Episode struct {
-	Full_text string
-	Title     string
-	Yt_id     string
+	Full_text string `bson:"full_text"`
+	Title     string `bson:"title"`
+	Yt_id     string `bson:"yt_id"`
 }
 
 // CREATE
@@ -63,4 +65,27 @@ func Delete_all(collection *mongo.Collection) {
 		log.Fatal(err)
 	}
 	fmt.Printf("Deleted %v documents in the collection\n", deleteResult.DeletedCount)
+}
+
+// SEARCH
+func Search(collection *mongo.Collection, searchterm string) []Episode {
+	searchStage := bson.D{{"$search", bson.D{{"text", bson.D{{"path", "full_text"}, {"query", searchterm}}}}}}
+	projectStage := bson.D{{"$project", bson.D{{"Yt_id", 1}, {"full_text", 1}, {"title", 1}, {"_id", 0}}}}
+	// specify the amount of time the operation can run on the server
+	opts := options.Aggregate().SetMaxTime(5 * time.Second)
+	// run pipeline
+	cursor, err := collection.Aggregate(context.Background(), mongo.Pipeline{searchStage, projectStage}, opts)
+	if err != nil {
+		panic(err)
+	}
+	// print results
+	var search_results []Episode
+	for cursor.Next(context.TODO()) {
+		var result Episode
+		if err := cursor.Decode(&result); err != nil {
+			log.Fatal(err)
+		}
+		search_results = append(search_results, result)
+	}
+	return search_results
 }

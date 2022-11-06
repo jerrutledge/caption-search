@@ -8,7 +8,6 @@ import (
 
 	"github.com/jerrutledge/caption-search/episode"
 	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -45,23 +44,29 @@ func main() {
 
 	collection := client.Database("caption-search").Collection("episodes")
 
-	// CREATE
-	example_episode := episode.Episode{
-		Full_text: "I'm made of moon cheese",
-		Title:     "Episode Title",
-		Yt_id:     "owien23k"}
+	// // CREATE
+	// example_episode := episode.Episode{
+	// 	Full_text: "I'm made of moon cheese",
+	// 	Title:     "Episode Title",
+	// 	Yt_id:     "owien23k"}
 
-	episode.Create(collection, example_episode)
+	// episode.Create(collection, example_episode)
 
-	// // READ
-	filter := bson.D{{"yt_id", "owien23k"}}
-	episode.Read(collection, filter)
+	// // // READ
+	// filter := bson.D{{"yt_id", "owien23k"}}
+	// episode.Read(collection, filter)
 
-	// // UPDATE
-	episode.Update(collection, filter)
+	// // // UPDATE
+	// episode.Update(collection, filter)
 
-	// DELETE
-	episode.Delete_all(collection)
+	// // DELETE
+	// episode.Delete_all(collection)
+
+	// SEARCH
+	res := episode.Search(collection, "anything")
+	for _, ep := range res {
+		fmt.Println(ep.Title)
+	}
 
 	// Disconnect from MongoDB
 	err = client.Disconnect(context.TODO())
