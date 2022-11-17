@@ -18,3 +18,4 @@
 transcripts
 .DS_Store
 client_secret_.json
+secret_api_key.json
