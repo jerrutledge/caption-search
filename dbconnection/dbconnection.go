@@ -33,6 +33,7 @@ func HelloResponse(w http.ResponseWriter, r *http.Request) {
 func SearchResponse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	query := "Wizard"
+	fmt.Println("QUERY: " + query)
 	coll, err := Connect()
 	if err != nil {
 		ReturnError(w)
