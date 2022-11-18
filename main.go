@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
-	"github.com/jerrutledge/caption-search/episode"
+	"github.com/jerrutledge/caption-search-api/dbconnection"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -33,40 +34,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Connected to MongoDB.")
-
-	// Panic if disconnected
-	defer func() {
-		if err := client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
-
-	collection := client.Database("caption-search").Collection("episodes")
-
-	// // CREATE
-	// example_episode := episode.Episode{
-	// 	Full_text: "I'm made of moon cheese",
-	// 	Title:     "Episode Title",
-	// 	Yt_id:     "owien23k"}
-
-	// episode.Create(collection, example_episode)
-
-	// // // READ
-	// filter := bson.D{{"yt_id", "owien23k"}}
-	// episode.Read(collection, filter)
-
-	// // // UPDATE
-	// episode.Update(collection, filter)
-
-	// // DELETE
-	// episode.Delete_all(collection)
-
-	// SEARCH
-	res := episode.Search(collection, "anything")
-	for _, ep := range res {
-		fmt.Println(ep.Title)
-	}
+	fmt.Println("Successful MongoDB ping.")
 
 	// Disconnect from MongoDB
 	err = client.Disconnect(context.TODO())
@@ -74,5 +42,13 @@ func main() {
 		panic(err)
 	}
 	fmt.Println("Connection to MongoDB closed.")
+
+	http.HandleFunc("/hello", dbconnection.HelloResponse)
+	http.HandleFunc("/search", dbconnection.SearchResponse)
+
+	fmt.Printf("Starting server at port 8080\n")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal(err)
+	}
 
 }

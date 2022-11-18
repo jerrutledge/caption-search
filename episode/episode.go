@@ -17,6 +17,11 @@ type Episode struct {
 	Yt_id     string `bson:"yt_id"`
 }
 
+type SearchResults struct {
+	Err     bool      `bson:"error"`
+	Results []Episode `bson:"results"`
+}
+
 // CREATE
 func Create(collection *mongo.Collection, episode Episode) {
 
@@ -68,7 +73,7 @@ func Delete_all(collection *mongo.Collection) {
 }
 
 // SEARCH
-func Search(collection *mongo.Collection, searchterm string) []Episode {
+func Search(collection *mongo.Collection, searchterm string) (error, []Episode) {
 	searchStage := bson.D{{"$search", bson.D{{"text", bson.D{{"path", "full_text"}, {"query", searchterm}}}}}}
 	projectStage := bson.D{{"$project", bson.D{{"Yt_id", 1}, {"full_text", 1}, {"title", 1}, {"_id", 0}}}}
 	// specify the amount of time the operation can run on the server
@@ -76,16 +81,18 @@ func Search(collection *mongo.Collection, searchterm string) []Episode {
 	// run pipeline
 	cursor, err := collection.Aggregate(context.Background(), mongo.Pipeline{searchStage, projectStage}, opts)
 	if err != nil {
-		panic(err)
+		return err, nil
 	}
 	// print results
 	var search_results []Episode
 	for cursor.Next(context.TODO()) {
 		var result Episode
 		if err := cursor.Decode(&result); err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			// TODO: actually handle error
+			continue
 		}
 		search_results = append(search_results, result)
 	}
-	return search_results
+	return nil, search_results
 }
