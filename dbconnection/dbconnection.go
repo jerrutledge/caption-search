@@ -31,16 +31,22 @@ func HelloResponse(w http.ResponseWriter, r *http.Request) {
 }
 
 func SearchResponse(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	params, present := query["q"]
+	if !present || len(params) == 0 {
+		ReturnError(w)
+		return
+	}
+	var queryString string = params[0]
 	w.Header().Set("Content-Type", "application/json")
-	query := "Wizard"
-	fmt.Println("QUERY: " + query)
+	fmt.Println("QUERY: " + queryString)
 	coll, err := Connect()
 	if err != nil {
 		ReturnError(w)
 		return
 	}
 	var response = episode.SearchResults{Err: false}
-	err, response.Results = episode.Search(coll, query)
+	err, response.Results = episode.Search(coll, queryString)
 	if err != nil {
 		ReturnError(w)
 		return
