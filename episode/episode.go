@@ -95,20 +95,21 @@ func Search(collection *mongo.Collection, searchterm string) (error, []Episode) 
 			continue
 		}
 		// translate the full text to partial text
+		numChars := 130
 		for _, w := range words {
-			var index int = strings.Index(result.Full_text, w)
+			var index int = strings.Index(strings.ToLower(result.Full_text), strings.ToLower(w))
 			if index != -1 {
-				if len(result.Full_text)-index > 50 {
-					result.Full_text = "..." + result.Full_text[index:index+50] + "..."
+				if len(result.Full_text)-index > numChars {
+					result.Full_text = "..." + result.Full_text[index:index+numChars] + "..."
 				} else {
 					result.Full_text = "..." + result.Full_text[index:]
 				}
 				break
 			}
 		}
-		// in case no partial text was found include the first 50 chars
-		if len(result.Full_text) > 60 {
-			result.Full_text = result.Full_text[:50] + "..."
+		// in case no partial text was found include the first numChars chars
+		if len(result.Full_text) > numChars+5 {
+			result.Full_text = result.Full_text[:numChars] + "..."
 		}
 		search_results = append(search_results, result)
 	}

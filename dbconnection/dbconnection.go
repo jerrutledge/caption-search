@@ -39,7 +39,12 @@ func SearchResponse(w http.ResponseWriter, r *http.Request) {
 	}
 	var queryString string = params[0]
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Println("QUERY: " + queryString)
+	// allow certain sites to make requests
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000") // local development
+	// w.Header().Set("Access-Control-Allow-Origin", "http://caption-search.jeremyrutledge.com") // web api
+	// w.Header().Set("Access-Control-Allow-Origin", "http://jeremyrutledge.com")                // web api
+	// allow gets
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
 	coll, err := Connect()
 	if err != nil {
 		ReturnError(w)
@@ -51,6 +56,7 @@ func SearchResponse(w http.ResponseWriter, r *http.Request) {
 		ReturnError(w)
 		return
 	}
+	fmt.Println("QUERY: " + queryString + " results: " + fmt.Sprint(len(response.Results)))
 	data, err := json.Marshal(response)
 	if err != nil {
 		ReturnError(w)
